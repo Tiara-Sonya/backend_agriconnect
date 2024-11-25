@@ -35,14 +35,28 @@ exports.login = (req, res) => {
 
   const sql = "SELECT * FROM users WHERE email = ?";
   db.query(sql, [email], async (err, results) => {
-    if (err) return res.status(500).json({ message: "Database error", error: err });
-    if (results.length === 0) return res.status(401).json({ message: "Invalid credentials" });
+    if (err)
+      return res.status(500).json({ message: "Database error", error: err });
+    if (results.length === 0)
+      return res.status(401).json({ message: "Invalid credentials" });
 
     const user = results[0];
     const match = await bcrypt.compare(password, user.password_hash);
     if (!match) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ user_id: user.user_id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    // Validasi JWT_SECRET
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: "JWT_SECRET is not configured" });
+    }
+
+    // Buat JWT
+    const token = jwt.sign(
+      { user_id: user.user_id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
     res.status(200).json({ token });
   });
 };
+

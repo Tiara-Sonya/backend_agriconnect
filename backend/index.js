@@ -1,6 +1,8 @@
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
+const cors = require("cors"); 
+
 const authRoutes = require("./routes/authRoute");
 const userRoutes = require("./routes/userRoute");
 const farmerRoutes = require("./routes/farmersRoute");
@@ -13,11 +15,19 @@ const connectionRoutes = require("./routes/connectionRoute");
 
 const app = express();
 
+const corsOptions = {
+  origin: "http://localhost:5173",
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+};
+
 // Middleware
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
+app.options("*", cors(corsOptions));
 
 // Routes
-app.use("/api/auth", authRoutes);
+app.use("/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/farmers", farmerRoutes);
 app.use("/api/job-seekers", jobSeekerRoutes);
@@ -29,7 +39,9 @@ app.use("/api/connections", connectionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  res.status(err.status || 500).json({ message: err.message || "Internal Server Error" });
+  res
+    .status(err.status || 500)
+    .json({ message: err.message || "Internal Server Error" });
 });
 
 // Start Server
